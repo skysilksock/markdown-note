@@ -4,8 +4,9 @@ from functools import wraps
 
 
 import os
-# import sqlite3
-import pysqlite3 as sqlite3
+import configparser
+import sqlite3
+# import pysqlite3 as sqlite3
 
 '''
 +-------------+-------------+
@@ -107,8 +108,14 @@ def update_note():
         print(e)
         return jsonify({'status': 'no', 'info': str(e)})
 
-
+def configParse(path: str) -> tuple:
+    config = configparser.ConfigParser()
+    config.read(path)
+    host = config['Server']['Host']
+    port = config['Server']['Port']
+    return host, port
 
 if __name__ == '__main__':
-    print(os.getcwd())
-    app.run(host="0.0.0.0", debug=True, port=5001)
+    # print(os.getcwd())
+    host, port = configParse("config.ini")
+    app.run(host=host, debug=True, port=port)
