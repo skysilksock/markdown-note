@@ -4,7 +4,7 @@ import Markdown from "./components/mdInput.vue";
 import Html from "./components/htmlOutput.vue";
 import Menu from "./components/others.vue";
 
-import { preUrl } from "../js/const";
+import { preUrl } from "./js/const";
 
 // ! 定义变量
 // const preUrl = "http://127.0.0.1:5001/api";
