@@ -11,6 +11,8 @@ import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import rehypeStringify from "rehype-stringify";
 
+import { preUrl } from "../js/const";
+
 // ! 定义响应式数据
 const props = defineProps({
 	htmlElementNodeList: NodeList,
@@ -29,7 +31,7 @@ defineExpose({
 });
 
 // ! 定义所需变量
-const preUrl = "http://112.74.72.34:5001/api";
+// const preUrl = "http://112.74.72.34:5001/api";
 // const preUrl = "http://127.0.0.1:5001/api";
 const MarkdownText = ref("");
 const MarkdownTexts = ref([ref({ markdownText: "", noteId: -1 })]);

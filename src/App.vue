@@ -4,8 +4,9 @@ import Markdown from "./components/mdInput.vue";
 import Html from "./components/htmlOutput.vue";
 import Menu from "./components/others.vue";
 
+import { preUrl } from "../js/const";
+
 // ! 定义变量
-const preUrl = "http://112.74.72.34:5001/api";
 // const preUrl = "http://127.0.0.1:5001/api";
 const htmlText = ref("解析后的HTML将会在这里显示...");
 const htmlElementNodeList = ref(null);

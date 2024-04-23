@@ -27,4 +27,4 @@ dist-ssr
 garbage
 env
 db
-src/assets
+src/assets/*
