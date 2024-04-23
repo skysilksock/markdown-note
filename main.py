@@ -109,6 +109,7 @@ def update_note():
         return jsonify({'status': 'no', 'info': str(e)})
 
 def configParse(path: str) -> tuple:
+    assert os.path.exists(path)
     config = configparser.ConfigParser()
     config.read(path)
     host = config['Server']['Host']
