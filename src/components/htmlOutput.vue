@@ -10,6 +10,16 @@ const Emit = defineEmits(["element"]);
 // ! 定义响应式数据
 const props = defineProps({
 	text: String,
+	scrollHeight: Number,
+});
+
+// ! 定义所需变量
+let box = null;
+
+// ! 钩子函数
+onMounted(() => {
+	box = document.getElementById("html-output");
+	console.log(box);
 });
 
 // ! 监听部分
@@ -17,8 +27,15 @@ watch(
 	() => props.text,
 	(newValue, oldValue) => {
 		setTimeout(() => {
-			Emit("element", document.getElementById("html-output").childNodes);
+			Emit("element", box.childNodes);
 		}, 500);
+	}
+);
+
+watch(
+	() => props.scrollHeight,
+	(newValue, oldValue) => {
+		box.scrollTop = newValue - box.clientHeight;
 	}
 );
 </script>

@@ -15,6 +15,7 @@ const markdownPage = ref(null);
 const date = ref(new Date().toLocaleString());
 const notes = ref([]);
 const editToday = ref(false);
+const scrollHeight = ref(0);
 
 // 更新渲染页面，并收集渲染页面元素并传给编辑界面
 const sendHtml = (data) => {
@@ -123,6 +124,10 @@ const deleteNote = (data) => {
 			console.error("Error:", error);
 		});
 };
+
+const scrollHtml = (data) => {
+	scrollHeight.value = data;
+};
 </script>
 
 <template>
@@ -132,6 +137,7 @@ const deleteNote = (data) => {
 			<Markdown
 				@parsed="sendHtml"
 				@deleteNote="deleteNote"
+				@scroll="scrollHtml"
 				:htmlElementNodeList="htmlElementNodeList"
 				:date="date"
 				:notes="notes"
@@ -140,7 +146,7 @@ const deleteNote = (data) => {
 			/>
 			<Menu @dateChange="dateChange" @uploadData="sendUploadData" @editToday="editTodayFunc" />
 		</div>
-		<Html :text="htmlText" @Element="sendHtmlElementNodeList" />
+		<Html @Element="sendHtmlElementNodeList" :text="htmlText" :scrollHeight="scrollHeight" />
 	</div>
 </template>
 

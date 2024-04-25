@@ -22,7 +22,7 @@ const props = defineProps({
 });
 
 // ! 定义信号传递函数
-const Emit = defineEmits(["parsed", "deleteNote"]);
+const Emit = defineEmits(["parsed", "deleteNote", "scroll"]);
 
 // ! 暴露属性与方法
 defineExpose({
@@ -80,12 +80,13 @@ const debouce = function (fn, t) {
 };
 
 /**
- * ? 将 markdown 文本转换为 html 文本并发送给父组件
+ * ? 将 markdown 文本转换为 html 文本并发送给父组件,在选择已有文本时调用
  * @param {String} -markdownText -markdown文本
  * @return {void}
  */
 const parse = debouce((markdownText) => {
 	if (!markdownText) {
+		alert("无文本");
 		// markdownText = markdownInput.value;
 		markdownText = MarkdownText.value;
 	}
@@ -94,6 +95,7 @@ const parse = debouce((markdownText) => {
 	Emit("parsed", htmlText);
 	// 等待页面渲染完成后将Dom元素数据发送到这
 	setTimeout(() => {
+		console.log("send");
 		analyseHeight(markdownText, props.htmlElementNodeList);
 	}, 1000);
 }, 500);
@@ -247,6 +249,10 @@ const changeMarkdown = () => {
  * @param {Number[][]}
  */
 function analyseHeight(markdownText, htmlNodeList) {
+	// 清空数组，不清空的话会保留之前的高度信息
+	markdownElementList = new Array();
+	htmlElementList = new Array();
+	// unfiled 生态解析出语法树
 	parseMarkdown(markdownText);
 	htmlNodeList = Array.from(htmlNodeList).filter((node) => {
 		if (node.nodeType === 3) return false; // 过滤文本节点
@@ -257,14 +263,25 @@ function analyseHeight(markdownText, htmlNodeList) {
 		(child) => child.type === "element"
 	);
 	console.log(treeData, treeData.children.length);
-	Ast.forEach((child, idx) => {
-		if (idx >= htmlNodeList.length) return;
-		console.log(child, htmlNodeList[idx]);
+
+	for (let idx = 0; idx < Ast.length; idx++) {
+		const child = Ast[idx];
+		// if (idx >= htmlNodeList.length) continue;
 		const offset = child.position.start.line * 15;
+		if (offset == 15 && idx != 0) break;
 		markdownElementList.push(offset);
 		htmlElementList.push(htmlNodeList[idx].offsetTop);
-	});
-	// console.log(markdownElementList, htmlElementList);
+	}
+
+	// Ast.forEach((child, idx) => {
+	// 	if (idx >= htmlNodeList.length) return;
+	// 	console.log(child, htmlNodeList[idx]);
+	// 	const offset = child.position.start.line * 15;
+	// 	markdownElementList.push(offset);
+	// 	htmlElementList.push(htmlNodeList[idx].offsetTop);
+	// });
+
+	console.log(markdownElementList, htmlElementList);
 	return [markdownElementList, htmlElementList];
 }
 
@@ -293,6 +310,39 @@ function parseMarkdown(markdownText) {
 			}
 			// console.log(treeData);
 		});
+}
+
+/**
+ * ? 计算当前浏览元素的对应的渲染页面高度并发送信号
+ * @return {void}
+ */
+function scrolling() {
+	// 获取中心线距文本框顶部的高度
+	const centerLineHeight =
+		markdownInput.scrollTop + markdownInput.clientHeight / 2;
+	// 二分查找大于这个高度的最近元素
+	const i = bisect_right(markdownElementList, centerLineHeight);
+	Emit("scroll", htmlElementList[i]);
+}
+
+/**
+ * ? 二分查找
+ * @param {Number[]} nums
+ * @param {Number} num
+ * @return {void}
+ */
+function bisect_right(nums, num) {
+	let l = 0,
+		r = nums.length;
+	while (l <= r) {
+		const mid = l + Math.floor((r - l) / 2);
+		if (nums[mid] > num) {
+			r = mid - 1;
+		} else {
+			l = mid + 1;
+		}
+	}
+	return l;
 }
 
 /**
@@ -461,6 +511,11 @@ watch(
 		let htmlText = marked.parse(newValue);
 		// 发送 htmlText 到父组件
 		Emit("parsed", htmlText);
+		// 等待页面渲染完成后将Dom元素数据发送到这
+		setTimeout(() => {
+			console.log("send");
+			analyseHeight(newValue, props.htmlElementNodeList);
+		}, 1000);
 	}, 500)
 );
 </script>

@@ -5,8 +5,8 @@ from functools import wraps
 
 import os
 import configparser
-import sqlite3
-# import pysqlite3 as sqlite3
+# import sqlite3
+import pysqlite3 as sqlite3
 
 '''
 +-------------+-------------+
@@ -107,6 +107,11 @@ def update_note():
     except Exception as e:
         print(e)
         return jsonify({'status': 'no', 'info': str(e)})
+
+@app.route('/api/get-database')
+def get_database():
+    assert os.path.exists("./db/markdownNote.db")
+    return send_file("./db/markdownNote.db")
 
 def configParse(path: str) -> tuple:
     assert os.path.exists(path)
