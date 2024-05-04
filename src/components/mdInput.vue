@@ -10,6 +10,8 @@ import { guideBtns } from "../js/const";
 import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import rehypeStringify from "rehype-stringify";
+import rehypeRaw from "https://esm.sh/rehype-raw@7";
+import { visit } from "unist-util-visit";
 
 import { preUrl } from "../js/const";
 
@@ -271,6 +273,7 @@ function analyseHeight(markdownText, htmlNodeList) {
 		if (offset == 15 && idx != 0) break;
 		markdownElementList.push(offset);
 		htmlElementList.push(htmlNodeList[idx].offsetTop);
+		console.log(child, htmlNodeList[idx]);
 	}
 
 	// Ast.forEach((child, idx) => {
@@ -300,7 +303,8 @@ function parseMarkdown(markdownText) {
 	unified()
 		.use(remarkParse)
 		// .use(remarkWarning)
-		.use(remarkRehype)
+		.use(remarkRehype, { allowDangerousHtml: true })
+		.use(rehypeRaw)
 		.use(customPlugin)
 		.use(rehypeStringify)
 		.process(markdownText, (err, file) => {
