@@ -189,7 +189,7 @@ table tr th {
 }
 
 /* ? 我的自定义样式及其样式加强 */
-select {
+#html-output select {
     /* 宽度和高度可以根据需要调整 */
     /* width: 100px;
     height: auto; */
