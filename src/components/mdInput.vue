@@ -19,25 +19,27 @@ const props = defineProps({
 	date: String,
 	notes: Object,
 	editToday: Boolean,
+	tags: Array,
 });
 
 // ! 定义信号传递函数
-const Emit = defineEmits(["parsed", "deleteNote", "scroll"]);
+const Emit = defineEmits(["parsed", "deleteNote", "scroll", "getTags"]);
 
 // ! 暴露属性与方法
 defineExpose({
 	getMarkdownText,
 	getHtmlText,
+	selectNote,
 });
 
 // ! 定义所需变量
 // const preUrl = "http://112.74.72.34:5001/api";
 // const preUrl = "http://127.0.0.1:5001/api";
 const MarkdownText = ref("");
-const MarkdownTexts = ref([ref({ markdownText: "", noteId: -1 })]);
+const MarkdownTexts = ref([ref({ markdownText: "", noteId: -1, tag_id: -1 })]);
 window.MarkdownTexts = MarkdownTexts.value;
 const curidx = ref(0);
-window.curidx = curidx;
+const curTagId = ref(-1);
 let markdownInput;
 let treeData = null;
 let markdownElementList = new Array();
@@ -45,6 +47,7 @@ let htmlElementList = new Array();
 const markdownEditor = ref("markdown-editor");
 const markdowneditorLow = ref("markdown-editor-H-low");
 const markdowneditorHigh = ref("markdown-editor-H-high");
+const editTag = ref(false);
 
 // ! 钩子函数
 onMounted(() => {
@@ -60,6 +63,7 @@ onMounted(() => {
 			},
 		})
 	);
+	Emit("getTags"); // 异步函数，获取标签数组
 });
 
 // ! 定义所需函数
@@ -408,6 +412,7 @@ function selectText(idx) {
 	MarkdownTexts.value[curidx.value].value.markdownText = MarkdownText.value;
 	// 更新当前选中索引和显示文本
 	curidx.value = idx;
+	curTagId.value = MarkdownTexts.value[idx].value.tag_id;
 	MarkdownText.value = MarkdownTexts.value[idx].value.markdownText;
 }
 
@@ -429,6 +434,7 @@ async function selectNote(noteId) {
 	}
 	// 拿到对应id的笔记文本内容
 	let markdownText;
+	let tag_id;
 	await fetch(preUrl + "/get-note", {
 		method: "POST",
 		headers: {
@@ -441,7 +447,7 @@ async function selectNote(noteId) {
 		.then((response) => response.json())
 		.then((response) => {
 			if (response.status == "ok") {
-				markdownText = response.data;
+				[markdownText, tag_id] = response.data;
 			} else {
 				alert("笔记获取失败", response.info);
 			}
@@ -449,8 +455,8 @@ async function selectNote(noteId) {
 		.catch((error) => {
 			console.error("Error:", error);
 		});
-	parse(markdownText);
-	const tmp = ref({ markdownText, noteId });
+	parse(markdownText); // 解析markdown文本
+	const tmp = ref({ markdownText, noteId, tag_id });
 	MarkdownTexts.value.push(tmp);
 	selectText(MarkdownTexts.value.length - 1);
 }
@@ -467,6 +473,7 @@ function closeText() {
 	}
 	// 更新当前选中索引和显示文本
 	MarkdownText.value = MarkdownTexts.value[curidx.value].value.markdownText;
+	curTagId.value = MarkdownTexts.value[curidx.value].value.tag_id;
 	document.getElementById(`text-btn-${curidx.value}`).focus();
 }
 
@@ -499,10 +506,59 @@ function updateNote() {
 		});
 }
 
+function showTags() {
+	editTag.value = true;
+}
+
+function changeNoteTag(tag_id) {
+	// 如果tag_id与当前笔记的tag_id相同，则不更新，同时关闭浮窗
+	console.log(tag_id, MarkdownTexts.value[curidx.value].value.tag_id);
+	if (tag_id == MarkdownTexts.value[curidx.value].value.tag_id) {
+		console.log("关闭");
+		closeFloatingBox();
+		return;
+	}
+	// 找到当前笔记的id
+	const note_id = MarkdownTexts.value[curidx.value].value.noteId;
+	fetch(preUrl + "/change-note-tag", {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify({
+			note_id: note_id,
+			tag_id: tag_id,
+		}),
+	})
+		.then((response) => response.json())
+		.then((response) => {
+			if (response.status == "ok") {
+				MarkdownTexts.value[curidx.value].value.tag_id = tag_id;
+				curTagId.value = tag_id;
+				closeFloatingBox();
+				alert("标签更新成功");
+			}
+		})
+		.catch((error) => {
+			console.error("Error:", error);
+		});
+}
+
+function closeFloatingBox() {
+	editTag.value = false;
+}
 // ! 计算属性
 const displayEditBtn = computed(() => {
 	return MarkdownTexts.value[curidx.value].value.noteId != -1;
 });
+
+function tagIdToName(tag_id) {
+	if (!tag_id || tag_id == -1) return "未分类";
+	if (props.tags && props.tags.length) {
+		return props.tags.find((tag) => tag.id == tag_id).name;
+	}
+	return "throw new error";
+}
 
 // ! 监听器
 watch(
@@ -513,7 +569,6 @@ watch(
 		Emit("parsed", htmlText);
 		// 等待页面渲染完成后将Dom元素数据发送到这
 		setTimeout(() => {
-			console.log("send");
 			analyseHeight(newValue, props.htmlElementNodeList);
 		}, 1000);
 	}, 500)
@@ -534,6 +589,7 @@ watch(
 				</button>
 			</div>
 			<div>
+				<button v-show="displayEditBtn" @click="showTags">标签</button>
 				<button v-show="MarkdownTexts.length > 1" @click="closeText">关闭</button>
 				<button v-show="displayEditBtn" @click="updateNote">更新</button>
 			</div>
@@ -560,6 +616,18 @@ watch(
 		</div>
 		<div v-else class="note-list">暂无笔记</div>
 	</div>
+	<div v-show="editTag" class="floating-box">
+		<div style="width:100%;text-align:right;">
+			<button @click="closeFloatingBox" class="close-btn">关闭</button>
+		</div>
+		<button @click="changeNoteTag(-1)" class="w-full">无标签{{ curTagId == -1 ? '✔️' : '' }}</button>
+		<button
+			v-for="item in tags"
+			:key="item.id"
+			@click="changeNoteTag(item.id)"
+			class="w-full"
+		>{{ tags.find(tag => tag.id === item.id).name }} {{ curTagId==item.id ? '✔️' : '' }}</button>
+	</div>
 </template>
 
 <style scoped>
@@ -579,6 +647,10 @@ textarea {
 
 .grow {
 	flex-grow: 1;
+}
+
+.w-full {
+	width: 100%;
 }
 
 .markdown-editor {
@@ -656,6 +728,28 @@ textarea {
 .text-btn {
 	font-size: 10px;
 	height: 30px;
+}
+
+.floating-box {
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	width: 300px;
+	height: 300px;
+	background-color: white;
+	border-radius: 5px;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+	text-align: center;
+	font-size: 1em;
+	z-index: 999;
+}
+
+.floating-box .close-btn {
+	cursor: pointer;
+	font-size: 0.5em;
+	border-radius: 5px;
+	border: 1px solid black;
 }
 
 img {

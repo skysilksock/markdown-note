@@ -56,6 +56,47 @@ def insert_note():
         print(e)
         return jsonify({'status': 'no', 'info': str(e)})
 
+@app.route('/api/get-tags')
+@sqlite
+def get_tags():
+    try:
+        username = request.args.get('username')
+        sql_search = f"select id,tag_name from tags where username='{username}';"
+        ans = g.conn.execute(sql_search).fetchall()
+        return jsonify({'status': 'ok', 'data': [{'id': a, 'name': b} for a, b in ans]})
+    except Exception as e:
+        print(e)
+        return jsonify({'status': 'no', 'info': str(e)})
+
+@app.route('/api/create-tag')
+@sqlite
+def create_tag():
+    try:
+        username = request.args.get('username')
+        tag_name = request.args.get('tag_name')
+        sql_insert = f"insert into tags values(NULL,'{tag_name}','{username}');"
+        g.conn.execute(sql_insert)
+        g.conn.commit()
+        return jsonify({'status': 'ok'})
+    except Exception as e:
+        print(e)
+        return jsonify({'status': 'no', 'info': str(e)})
+
+
+@app.route('/api/change-note-tag', methods=['POST'])
+@sqlite
+def change_note_tag():
+    try:
+        note_id = request.get_json()["note_id"]
+        tag_id = request.get_json()["tag_id"]
+        sql_update = f"update notes set tag_id='{tag_id}' where id={note_id};"
+        g.conn.execute(sql_update)
+        g.conn.commit()
+        return jsonify({'status': 'ok'})
+    except Exception as e:
+        print(e)
+        return jsonify({'status': 'no', 'info': str(e)})
+
 @app.route('/api/get-note-list', methods=['POST'])
 @sqlite
 def get_note_list():
@@ -76,13 +117,37 @@ def get_note():
         # username = request.get_json()["username"] if "username" in request.get_json() else "admin"
         # date = request.get_json()["time"]
         note_id = request.get_json()["id"]
-        sql_search = f"select text from notes where id='{note_id}';"
-        ans = g.conn.execute(sql_search).fetchone()[0]
+        # sql_search = f"""select notes.text,tags.tag_name
+        #                 from notes join tags on notes.tag_id=tags.id
+        #                 where notes.id={note_id};"""
+        sql_search = f"select text,tag_id from notes where id={note_id}"
+        ans = g.conn.execute(sql_search).fetchone()
         return jsonify({'status': 'ok', 'data': ans})
     except Exception as e:
-        print(e)
         return jsonify({'status': 'no', 'info': str(e)})
 
+@app.route('/api/get-notes-by-tag')
+@sqlite
+def get_notes_by_tag():
+    try:
+        username = request.args.get('username')
+        tag_id = request.args.get('tag_id')
+        sql_search = f"select id,title from notes where username='{username}' and tag_id={tag_id};"
+        ans = g.conn.execute(sql_search).fetchall()
+        return jsonify({'status': 'ok', 'data': ans})
+    except Exception as e:
+        return jsonify({'status': 'no', 'info': str(e)})
+
+@app.route('/api/get-all-notes')
+@sqlite
+def get_all_notes():
+    try:
+        username = request.args.get('username')
+        sql_search = f"select id,title from notes where username='{username}';"
+        ans = g.conn.execute(sql_search).fetchall()
+        return jsonify({'status': 'ok', 'data': ans})
+    except Exception as e:
+        return jsonify({'status': 'no', 'info': str(e)})
 
 @app.route('/api/delete-note', methods=['POST'])
 @sqlite

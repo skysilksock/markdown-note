@@ -1,13 +1,13 @@
 <script setup>
-import { onMounted, ref, watch } from "vue";
+import { getCurrentInstance, onMounted, ref, watch } from "vue";
 import Markdown from "./components/mdInput.vue";
 import Html from "./components/htmlOutput.vue";
-import Menu from "./components/others.vue";
+import Others from "./components/others.vue";
+import Menu from "./components/menu.vue";
 
 import { preUrl } from "./js/const";
 
 // ! 定义变量
-// const preUrl = "http://127.0.0.1:5001/api";
 const htmlText = ref("解析后的HTML将会在这里显示...");
 const htmlElementNodeList = ref(null);
 const uploadData = ref(null);
@@ -16,7 +16,10 @@ const date = ref(new Date().toLocaleString());
 const notes = ref([]);
 const editToday = ref(false);
 const scrollHeight = ref(0);
+const tags = ref([]);
+const menuPage = ref(null);
 
+// ! 定义方法
 // 更新渲染页面，并收集渲染页面元素并传给编辑界面
 const sendHtml = (data) => {
 	htmlText.value = data;
@@ -103,6 +106,10 @@ function editTodayFunc() {
 	editToday.value = !editToday.value;
 }
 
+function openMenu() {
+	menuPage.value.open();
+}
+
 const deleteNote = (data) => {
 	fetch(preUrl + "/delete-note", {
 		method: "POST",
@@ -128,23 +135,37 @@ const deleteNote = (data) => {
 const scrollHtml = (data) => {
 	scrollHeight.value = data;
 };
+
+const getTags = (data) => {
+	tags.value = data;
+};
+
+const selectNote = (data) => {
+	markdownPage.value.selectNote(data);
+};
 </script>
 
 <template>
 	<!-- <HelloWorld /> -->
 	<div class="markdown-preview">
+		<div class="manage-container">
+			<button @click="openMenu">管理</button>
+		</div>
+		<Menu ref="menuPage" @getTags="getTags" @selectNote="selectNote" />
 		<div class="markdown-preview-left">
 			<Markdown
 				@parsed="sendHtml"
 				@deleteNote="deleteNote"
 				@scroll="scrollHtml"
+				@getTags="getTags"
 				:htmlElementNodeList="htmlElementNodeList"
 				:date="date"
 				:notes="notes"
 				:editToday="editToday"
+				:tags="tags"
 				ref="markdownPage"
 			/>
-			<Menu @dateChange="dateChange" @uploadData="sendUploadData" @editToday="editTodayFunc" />
+			<Others @dateChange="dateChange" @uploadData="sendUploadData" @editToday="editTodayFunc" />
 		</div>
 		<Html @Element="sendHtmlElementNodeList" :text="htmlText" :scrollHeight="scrollHeight" />
 	</div>
@@ -162,6 +183,17 @@ const scrollHtml = (data) => {
 	display: flex;
 	flex-direction: column;
 	justify-content: space-between;
+}
+
+.manage-container {
+	position: fixed;
+	left: 0px;
+	width: 10%;
+	text-align: center;
+}
+
+.manage-container button {
+	width: auto;
 }
 
 @media screen and (max-width: 768px) {
