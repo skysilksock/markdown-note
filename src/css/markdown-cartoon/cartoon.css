@@ -291,12 +291,6 @@ html {
     line-height: 0.8rem;
 }
 
-#html-output input[type="checkbox"] {
-    position: absolute;
-    top: 7px;
-    left: -3px;
-}
-
 #html-output .md-task-list-item p {
     margin: 0px 1.8rem;
 }
