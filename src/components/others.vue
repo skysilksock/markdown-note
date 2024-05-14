@@ -45,4 +45,10 @@ export default {
 .margin-\[5px\] {
 	margin: 5px;
 }
+
+@media screen and (max-width: 768px) {
+	button {
+		font-size: 1em;
+	}
+}
 </style>

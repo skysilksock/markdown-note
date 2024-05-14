@@ -592,10 +592,10 @@ watch(
 					<img :src="item.url" />
 				</button>
 			</div>
-			<div>
-				<button v-show="displayEditBtn" @click="showTags">标签</button>
-				<button v-show="MarkdownTexts.length > 1" @click="closeText">关闭</button>
-				<button v-show="displayEditBtn" @click="updateNote">更新</button>
+			<div style="display: flex;">
+				<button v-show="displayEditBtn" @click="showTags" class="option-btn">标签</button>
+				<button v-show="MarkdownTexts.length > 1" @click="closeText" class="option-btn">关闭</button>
+				<button v-show="displayEditBtn" @click="updateNote" class="option-btn">更新</button>
 			</div>
 		</div>
 		<textarea v-model="MarkdownText" id="markdown-input" placeholder="输入Markdown文本..."></textarea>
@@ -708,6 +708,7 @@ textarea {
 }
 
 .guide-btn {
+	text-align: center;
 	display: flex;
 	width: 30px;
 	height: 30px;
@@ -758,5 +759,21 @@ textarea {
 
 img {
 	width: 100%;
+}
+
+@media screen and (max-width: 768px) {
+	.editor-menu {
+		flex-direction: column;
+	}
+	.guide-btns {
+		justify-content: space-between;
+	}
+	.option-btn {
+		margin-top: 0.5em;
+		margin-bottom: 0.5em;
+		flex-grow: 1;
+		padding: 5px;
+		font-size: small;
+	}
 }
 </style>

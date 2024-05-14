@@ -114,8 +114,8 @@ select:focus {
 }
 
 @media screen and (max-width: 768px) {
-	#html-output {
-		width: auto;
+	.container {
+		width: 100%;
 	}
 }
 </style>

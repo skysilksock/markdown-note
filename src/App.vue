@@ -107,6 +107,7 @@ function editTodayFunc() {
 }
 
 function openMenu() {
+	document.body.style.overflow = "hidden";
 	menuPage.value.open();
 }
 
@@ -203,6 +204,18 @@ const selectNote = (data) => {
 
 	.markdown-preview-left {
 		width: 100%;
+	}
+
+	.manage-container {
+		position: relative;
+		width: 100%;
+		margin-bottom: 10px;
+		font-size: small;
+	}
+	.manage-container button {
+		padding: 5px;
+		width: 100%;
+		font-size: small;
 	}
 }
 </style>

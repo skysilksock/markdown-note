@@ -83,8 +83,12 @@ button:focus-visible {
   }
 }
 
-@media screen and (max-width: 870) {
+@media screen and (max-width: 768px) {
   button {
     font-size: small;
+  }
+
+  #app {
+    max-width: none;
   }
 }

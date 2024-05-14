@@ -5,24 +5,7 @@ export default {
 	data() {
 		return {
 			isShow: false,
-			tags: [
-				{
-					id: 1,
-					name: "前端",
-				},
-				{
-					id: 2,
-					name: "后端",
-				},
-				{
-					id: 3,
-					name: "数据库",
-				},
-				{
-					id: 4,
-					name: "算法",
-				},
-			],
+			tags: [],
 			notes: [],
 		};
 	},
@@ -34,6 +17,7 @@ export default {
 			this.isShow = true;
 		},
 		close() {
+			document.body.style.overflow = "scroll";
 			// 不显示菜单
 			this.isShow = false;
 		},
@@ -143,7 +127,7 @@ export default {
 			<hr />
 		</div>
 		<div class="tags-container">
-			<div style="width: 48%;">
+			<div class="tag w-half">
 				<button
 					v-for="item in tags"
 					:key="item.id"
@@ -151,8 +135,9 @@ export default {
 					class="w-full"
 				>{{ item.name }}</button>
 				<button @click="createTag" class="w-full">新建</button>
+				<hr class="split-line" />
 			</div>
-			<div style="width: 48%;" class="note-container">
+			<div class="note w-half">
 				<div v-for="item in notes" :key="item[0]">
 					<div style="display: flex;">
 						<button @click="selectNote(item[0])" class="note-display grow">{{ item[1] }}</button>
@@ -198,7 +183,7 @@ export default {
 	height: 200px;
 }
 
-.note-container {
+.note {
 	overflow-y: scroll;
 	text-align: center;
 }
@@ -209,5 +194,37 @@ export default {
 
 .w-full {
 	width: 100%;
+}
+
+.w-half {
+	width: 45%;
+}
+
+.split-line {
+	display: none;
+}
+
+@media screen and (max-width: 768px) {
+	.menu {
+		--menu-width: 100%;
+		--menu-height: 100%;
+	}
+	.tags-container {
+		flex-direction: column;
+	}
+	.note {
+		flex-grow: 1;
+	}
+	.w-half {
+		width: 100%;
+	}
+	.split-line {
+		display: block;
+		width: 100%;
+		height: 0;
+	}
+	.tags-container {
+		justify-content: flex-start;
+	}
 }
 </style>
