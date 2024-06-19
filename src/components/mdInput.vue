@@ -55,6 +55,7 @@ const editTag = ref(false);
 onMounted(() => {
 	markdownInput = document.getElementById("markdown-input");
 	changeMarkdown(); // 加载自定义markdown语法
+	// changeMarkdownCode();
 	// 高亮拓展
 	marked.use(
 		markedHighlight({
@@ -247,6 +248,137 @@ const changeMarkdown = () => {
 	});
 	marked.use({ extensions: [checkboxTokenizer, checkboxRenderer] });
 };
+
+/**
+ * ? 代码块语法加强
+ */
+const changeMarkdownCode = () => {
+	// 自定义代码块解析器
+	const renderer = new marked.Renderer();
+
+	renderer.code = (code, infostring, escaped) => {
+		const [lang, options] = infostring.split(" ");
+		if (options === "[]") {
+			// 处理带有[]标记的代码块
+			// if (!renderer.tabs) {
+			// 	renderer.tabs = [];
+			// }
+			// renderer.tabs.push({ lang, code, escaped });
+			return "";
+		} else {
+			// 默认处理方式
+			return ``;
+		}
+	};
+
+	// 配置marked
+	// marked.setOptions({
+	// 	renderer,
+	// 	highlight: (code, lang) => {
+	// 		const language = hljs.getLanguage(lang) ? lang : "plaintext";
+	// 		return hljs.highlight(code, { language }).value;
+	// 	},
+	// });
+};
+
+/**
+ * ? 解析语法增强代码块
+ */
+function markdownPretreatment(markdown) {
+	const lines = markdown.split("\n");
+	let mergedMarkdown = "";
+
+	function dfs(index, inside, tabs) {
+		if (index >= lines.length) {
+			if (tabs.length) {
+				mergedMarkdown += generateTabs(tabs);
+			}
+			return;
+		}
+
+		if (lines[index].startsWith("~~~")) {
+			if (lines[index] == "~~~") {
+				if (inside) {
+					dfs(index + 1, false, tabs);
+					return;
+				} else {
+					mergedMarkdown += lines[index] + "\n";
+					dfs(index + 1, inside, tabs);
+					return;
+				}
+			}
+			// 找到代码块的开始和结束位置
+			const [lang, options, title] = lines[index].slice(3).split(" ");
+			if (options === "[]") {
+				// 处理带有[]标记的代码块
+				tabs.push({ lang, code: "", escaped: false, title });
+				dfs(index + 1, true, tabs);
+			} else {
+				mergedMarkdown += lines[index] + "\n";
+				dfs(index + 1, inside, tabs);
+			}
+		} else {
+			if (inside) {
+				tabs[tabs.length - 1].code += lines[index] + "\n";
+				dfs(index + 1, inside, tabs);
+			} else {
+				if (tabs.length) {
+					mergedMarkdown += generateTabs(tabs);
+				}
+				mergedMarkdown += lines[index] + "\n";
+				dfs(index + 1, inside, []);
+			}
+		}
+	}
+
+	dfs(0, false, []);
+
+	return mergedMarkdown;
+}
+
+/**
+ * ? 解析tab标签
+ */
+function generateTabs(tabs) {
+	const tabContainerId = `tabs-${Math.random().toString(36).substring(2, 9)}`;
+	let content = "";
+	let tabHeader = "";
+	let tabContent = "";
+	let tabContent_virtual = "";
+
+	tabs.forEach((tab, index) => {
+		let { lang, code, escaped, title } = tab;
+
+		const language = hljs.getLanguage(lang) ? lang : "shell";
+		code = hljs.highlight(code, { language }).value;
+		code = code.replace(/\n(\s*)?\n/g, "<br><br>");
+
+		const tabId = `${tabContainerId}-tab${index}`;
+		const contentId = `${tabContainerId}-content${index}`;
+
+		tabHeader = `
+            <input type="radio" class="mix-tab" name="${tabContainerId}" id="${tabId}" ${
+			index === 0 ? "checked" : ""
+		}>
+            <label for="${tabId}">${title || lang}</label>`;
+
+		tabContent = `
+            <div class="mix-code-content" id="${contentId}">
+                <pre><code class="hljs language-${lang}">${code}</code></pre>
+            </div>`;
+		tabContent_virtual = `
+            <div class="mix-code-content-virtual" id="${contentId}">
+                <pre><code class="hljs language-${lang}">${code}</code></pre>
+            </div>`;
+		content += `<li class="mix-tab-item">${tabHeader}${tabContent}${tabContent_virtual}</li>`;
+	});
+
+	return `
+<ul class="mix-code-container">
+	${content}
+</ul>
+    `;
+}
 
 /**
  * ? 解析出 Ast 语法树并与 DOM 元素高度对应，返回两个数组
@@ -568,7 +700,13 @@ function tagIdToName(tag_id) {
 watch(
 	MarkdownText,
 	debouce((newValue, oldValue) => {
+		const t1 = new Date().getTime();
+		newValue = markdownPretreatment(newValue);
+		const t2 = new Date().getTime();
+		console.log("markdown pretreatment time:", t2 - t1);
+		// console.log("newValue", newValue);
 		let htmlText = marked.parse(newValue);
+		// console.log("htmlText", htmlText);
 		// 发送 htmlText 到父组件
 		Emit("parsed", htmlText);
 		// 等待页面渲染完成后将Dom元素数据发送到这

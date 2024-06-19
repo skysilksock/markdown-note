@@ -5,8 +5,8 @@ from functools import wraps
 
 import os
 import configparser
-# import sqlite3
-import pysqlite3 as sqlite3
+import sqlite3
+# import pysqlite3 as sqlite3
 
 '''
 +-------------+-------------+

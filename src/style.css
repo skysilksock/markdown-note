@@ -92,3 +92,76 @@ button:focus-visible {
     max-width: none;
   }
 }
+
+/* 复合代码块增强样式 */
+.mix-code-container {
+  height: max-content;
+  border: 1px solid #ccc;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+  padding-left: 5px;
+}
+
+/* 隐藏所有的 radio inputs */
+.mix-code-container .mix-tab {
+  display: none;
+}
+
+.mix-code-container .mix-tab-item {
+  list-style-type: none;
+  height: auto;
+  width: auto;
+  overflow-x: hidden;
+  margin: 10px;
+}
+
+.mix-code-container .mix-tab-item>label {
+  width: min(120px, max-content);
+}
+
+/* 悬浮标签上的样式 */
+.mix-code-container .mix-tab:hover+label {
+  cursor: pointer;
+  background-color: #ddd;
+  font-weight: bold;
+}
+
+/* 当选中标签时的样式 */
+.mix-code-container .mix-tab:checked+label {
+  background-color: #ddd;
+  line-height: 20px;
+  font-weight: bold;
+}
+
+/* 隐藏所有的 tab-content */
+.mix-code-container .mix-code-content-virtual {
+  color: white;
+  display: none;
+  position: relative;
+  left: 5px;
+  margin-top: 10px;
+  width: 1px;
+  z-index: -999;
+}
+
+.mix-code-container .mix-code-content {
+  color: black;
+  display: none;
+  position: absolute;
+  left: 5px;
+  margin-top: 10px;
+  width: calc(100% - 10px);
+}
+
+/* 显示选中的 tab-content */
+.mix-code-container .mix-tab:checked+label~.mix-code-content-virtual {
+  display: flex;
+  padding-top: 0px;
+}
+
+/* 显示选中的 tab-content */
+.mix-code-container .mix-tab:checked+label+.mix-code-content {
+  display: block;
+  padding-top: 0px;
+}

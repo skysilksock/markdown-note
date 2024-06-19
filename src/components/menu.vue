@@ -17,7 +17,8 @@ export default {
 			this.isShow = true;
 		},
 		close() {
-			document.body.style.overflow = "scroll";
+			if (window.innerWidth < 768)
+				document.body.style.overflow = "scroll";
 			// 不显示菜单
 			this.isShow = false;
 		},

@@ -26,6 +26,7 @@ const guideBtns = [
 ];
 
 const preUrl = "http://112.74.72.34:5001/api";
+// const preUrl = "http://79.8.51.175:5001";
 // const preUrl = "http://127.0.0.1:5001/api";
 
 export { guideBtns, preUrl };
