@@ -282,9 +282,22 @@ const changeMarkdownCode = () => {
 };
 
 /**
- * ? 解析语法增强代码块
+ * ? 将文本进行预处理，解析语法增强代码块和轮播图语法转化为预定义的html标签
+ * @param {String} markdown
+ * @returns {String}
  */
 function markdownPretreatment(markdown) {
+	markdown = markdownPretreatmentMixCode(markdown);
+	markdown = markdownPretreatmentCarousel(markdown);
+	return markdown;
+}
+
+/**
+ * ? 解析混合代码块语法
+ * @param {String} markdown
+ * @returns {String}
+ */
+function markdownPretreatmentMixCode(markdown) {
 	const lines = markdown.split("\n");
 	let mergedMarkdown = "";
 
@@ -332,6 +345,78 @@ function markdownPretreatment(markdown) {
 	}
 
 	dfs(0, false, []);
+
+	return mergedMarkdown;
+}
+
+/**
+ * ? 解析轮播图语法
+ * @param {String} markdown
+ * @returns {String}
+ */
+function markdownPretreatmentCarousel(markdown) {
+	/**
+	 * ? 将一块轮播图中的原始文本转化为html文本
+	 * @param {String} carouselText 原始文本
+	 * @returns {String} 转化后的html文本
+	 */
+	function parseCarousel(carouselText) {
+		const regex = /!\[([^\]]*)\]\(([^ ]*)(?: "([^"]*)")?\)/;
+		let match;
+
+		const lines = carouselText.split("\n");
+		console.log(lines);
+		let ans = "";
+
+		// 当前的这组轮播图的id
+		const carouselId = `carousel-${Math.random()
+			.toString(36)
+			.substring(2, 9)}`;
+
+		// 将文本处理为html文本
+		lines.forEach((line, index) => {
+			if ((match = regex.exec(line)) !== null) {
+				const altText = match[1];
+				const url = match[2];
+				const title = match[3] || ""; // hover text is optional
+				ans += `<div class="Carousel-item">
+	<input type="radio" name="${carouselId}" class="carousel-tab" ${
+					index === 0 ? "checked" : ""
+				}>
+	<img class="img" src="${url}" alt="${altText}}"
+		title="${title}">
+	<img class="img-virtual" src="${url}"
+		alt="" title="">
+        </div>\n`;
+			}
+		});
+		return `<div class="Carousel-container">${ans}</div>\n`;
+	}
+
+	const lines = markdown.split("\n");
+	let flag = false;
+	let mergedMarkdown = "";
+	let carouselText = "";
+
+	for (let line of lines) {
+		if (line.startsWith("@carousel")) {
+			flag = true;
+			continue;
+		}
+		if (line.startsWith("@endcarousel")) {
+			if (carouselText != "") {
+				mergedMarkdown += parseCarousel(carouselText);
+				carouselText = "";
+			}
+			flag = false;
+			continue;
+		}
+		if (flag) {
+			carouselText += line + "\n";
+		} else {
+			mergedMarkdown += line + "\n";
+		}
+	}
 
 	return mergedMarkdown;
 }
